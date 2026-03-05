@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recorrido RA - Unicaribe</title>
+
+  <!-- A-Frame + AR.js -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    body { margin: 0; overflow: hidden; font-family: system-ui; }
+    .hint {
+      position: fixed; left: 12px; right: 12px; bottom: 12px;
+      padding: 10px 12px; background: rgba(0,0,0,.6);
+      color: #fff; border-radius: 12px; font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    renderer="antialias: true; precision: mediump;"
+  >
+    <!-- Marcador predefinido "hiro" -->
+    <a-marker preset="hiro">
+      <!-- Letrero -->
+      <a-plane position="0 0.9 0" rotation="-90 0 0" width="1.6" height="0.9" color="#111" opacity="0.75"></a-plane>
+
+      <!-- Texto -->
+      <a-text
+        value="Biblioteca\nUniversidad del Caribe"
+        position="-0.75 0.91 0.35"
+        rotation="-90 0 0"
+        width="2.5"
+        color="#FFFFFF"
+      ></a-text>
+
+      <!-- Un ícono simple (caja) -->
+      <a-box position="0 0.35 0" rotation="0 45 0" depth="0.3" height="0.3" width="0.3"></a-box>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <div class="hint">
+    1) Permite el acceso a la cámara. 2) Apunta al marcador “Hiro” impreso.
+  </div>
+</body>
+</html>
