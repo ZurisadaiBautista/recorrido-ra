@@ -2,51 +2,57 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <!--
+    user-scalable=no evita que Chrome mobile haga zoom al doble-tap,
+    que desincroniza video y canvas.
+  -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Recorrido RA · Unicaribe</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;800&display=swap"
+    rel="stylesheet">
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #08101e;
-      --surface:   rgba(255,255,255,.07);
-      --border:    rgba(255,255,255,.12);
-      --accent:    #00e5ff;
-      --accent2:   #7c4dff;
-      --text:      #f0f4ff;
-      --muted:     rgba(240,244,255,.55);
-      --font:      'Space Grotesk', system-ui, sans-serif;
-      --radius:    20px;
+      --bg:      #08101e;
+      --surface: rgba(255,255,255,.07);
+      --border:  rgba(255,255,255,.12);
+      --accent:  #00e5ff;
+      --accent2: #7c4dff;
+      --text:    #f0f4ff;
+      --muted:   rgba(240,244,255,.55);
+      --font:    'Space Grotesk', system-ui, sans-serif;
+      --radius:  20px;
     }
 
     html, body {
-      height: 100%;
+      width: 100%; height: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: var(--font);
       overflow: hidden;
     }
 
-    /* ─── START SCREEN ─────────────────────────────── */
+    /* ═══════════════ START SCREEN ═══════════════ */
     #start-screen {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       padding: 24px;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%,
-        rgba(124,77,255,.18) 0%, transparent 70%),
-        var(--bg);
+      background: radial-gradient(
+        ellipse 80% 60% at 50% 0%,
+        rgba(124,77,255,.18) 0%, transparent 70%
+      ), var(--bg);
       z-index: 100;
       transition: opacity .4s ease;
     }
     #start-screen.hidden { opacity: 0; pointer-events: none; }
 
     .logo-ring {
-      width: 72px; height: 72px;
-      border-radius: 50%;
+      width: 72px; height: 72px; border-radius: 50%;
       border: 2.5px solid var(--accent);
       display: grid; place-items: center;
       margin-bottom: 28px;
@@ -54,7 +60,6 @@
       animation: pulse-ring 2.5s ease-in-out infinite;
     }
     .logo-ring svg { width: 36px; height: 36px; fill: var(--accent); }
-
     @keyframes pulse-ring {
       0%,100% { box-shadow: 0 0 18px rgba(0,229,255,.20); }
       50%      { box-shadow: 0 0 40px rgba(0,229,255,.45); }
@@ -68,18 +73,9 @@
       padding: 28px 24px;
       backdrop-filter: blur(12px);
     }
-
-    .card h1 {
-      font-size: 22px; font-weight: 800;
-      letter-spacing: -.3px;
-      margin-bottom: 6px;
-    }
+    .card h1 { font-size: 22px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 6px; }
     .card h1 span { color: var(--accent); }
-
-    .card .sub {
-      font-size: 14px; color: var(--muted);
-      line-height: 1.5; margin-bottom: 22px;
-    }
+    .card .sub { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 22px; }
 
     /* Status panel */
     #status-panel {
@@ -99,109 +95,120 @@
     .status-row.ok   .dot { background: #00e676; box-shadow: 0 0 6px #00e676; }
     .status-row.err  .dot { background: #ff5252; box-shadow: 0 0 6px #ff5252; }
     .status-row.busy .dot { background: var(--accent); animation: blink .8s ease infinite; }
-
     @keyframes blink { 50% { opacity: .2; } }
 
-    /* Start button */
     #start-btn {
-      width: 100%;
-      padding: 15px;
-      font-family: var(--font);
-      font-size: 16px; font-weight: 800;
-      letter-spacing: .3px;
-      border: none; border-radius: 14px;
-      cursor: pointer;
+      width: 100%; padding: 15px;
+      font-family: var(--font); font-size: 16px; font-weight: 800; letter-spacing: .3px;
+      border: none; border-radius: 14px; cursor: pointer;
       background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
       color: #fff;
       transition: opacity .2s, transform .15s;
       box-shadow: 0 6px 24px rgba(0,229,255,.25);
     }
-    #start-btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+    #start-btn:disabled { opacity: .5; cursor: not-allowed; }
     #start-btn:not(:disabled):active { transform: scale(.97); }
 
-    .hint {
-      margin-top: 14px; font-size: 12px;
-      color: var(--muted); text-align: center; line-height: 1.5;
-    }
+    .hint { margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
     .hint code {
-      background: rgba(0,229,255,.1);
-      color: var(--accent);
-      border-radius: 4px; padding: 1px 5px;
-      font-size: 12px;
+      background: rgba(0,229,255,.1); color: var(--accent);
+      border-radius: 4px; padding: 1px 5px; font-size: 12px;
     }
 
-    /* ─── AR LAYER ──────────────────────────────────── */
+    /* ═══════════════════════════════════════════════
+       AR LAYER — ALINEACIÓN VIDEO + CANVAS
+       ───────────────────────────────────────────────
+       CAUSA de los rectángulos negros (versión anterior):
+         object-fit:contain → letterbox → barras sin imagen
+         → el canvas de A-Frame era más grande que el área
+           visible del video → overlay desalineado.
+
+       SOLUCIÓN:
+         1. <video>  → object-fit:COVER  → llena 100vw×100vh
+         2. <canvas> → 100vw×100vh + background:transparent
+         3. <a-scene> → embedded + alpha:true
+         4. window resize dispatch → A-Frame recalcula frustum
+            para que la proyección 3D coincida con el video.
+    ════════════════════════════════════════════════ */
+
     #ar-root {
       position: fixed; inset: 0;
+      width: 100vw; height: 100vh;
       display: none;
       background: #000;
       z-index: 1;
     }
 
     /*
-     * ZOOM FIX (Android/Chrome):
-     *
-     * AR.js inserts <video id="arjs-video"> directly into <body>.
-     * By default it uses object-fit:cover → recorta / zoom.
-     * Solución: object-fit:contain + centrado absoluto.
-     *
-     * También corregimos el <canvas> que A-Frame crea,
-     * asegurándonos de que NO lo tape ni lo escale.
+     * Selector doble: por id (AR.js 3.x) y por atributo (fallback).
+     * object-fit:cover → sin barras, llena pantalla.
+     * transform:none   → cancela escala interna de AR.js.
      */
-    #arjs-video {
+    #arjs-video,
+    video[autoplay] {
       position: fixed !important;
       top: 0 !important; left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: contain !important; /* ← quita el zoom */
+      width: 100vw !important; height: 100vh !important;
+      object-fit: cover !important;
+      object-position: center center !important;
       background: #000 !important;
       z-index: 1 !important;
-      transform: none !important;     /* elimina cualquier scale de AR.js */
+      transform: none !important;
     }
 
-    /* Canvas de A-Frame: overlay transparente */
+    /*
+     * Canvas de A-Frame: igual tamaño que el video.
+     * background:transparent → se ve el video debajo.
+     * pointer-events:none    → los toques pasan al video/AR.js.
+     */
     #ar-root canvas,
-    a-scene canvas {
+    a-scene canvas,
+    canvas.a-canvas {
       position: fixed !important;
       top: 0 !important; left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 2 !important;
+      width: 100vw !important; height: 100vh !important;
       background: transparent !important;
+      z-index: 2 !important;
+      transform: none !important;
+      pointer-events: none !important;
     }
 
-    /* HUD de estado en AR */
+    /* a-scene ocupa todo el viewport */
+    a-scene {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 100vw !important; height: 100vh !important;
+    }
+
+    /* HUD flotante */
     #ar-hud {
       position: fixed;
       bottom: 24px; left: 50%;
       transform: translateX(-50%);
       z-index: 10;
-      background: rgba(8,16,30,.8);
+      background: rgba(8,16,30,.82);
       border: 1px solid var(--border);
       border-radius: 999px;
       padding: 8px 18px;
       font-size: 13px; color: var(--muted);
       backdrop-filter: blur(8px);
       pointer-events: none;
+      white-space: nowrap;
       display: none;
     }
     #ar-hud.visible { display: block; }
 
-    /* Botón cerrar AR */
+    /* Botón cerrar */
     #close-ar {
-      position: fixed;
-      top: 18px; right: 18px;
-      z-index: 20;
-      width: 40px; height: 40px;
+      position: fixed; top: 18px; right: 18px;
+      z-index: 20; width: 40px; height: 40px;
       background: rgba(8,16,30,.85);
       border: 1px solid var(--border);
-      border-radius: 50%;
-      cursor: pointer;
-      display: none;
-      place-items: center;
-      color: var(--text);
-      font-size: 18px;
+      border-radius: 50%; cursor: pointer;
+      display: none; place-items: center;
+      color: var(--text); font-size: 18px;
       backdrop-filter: blur(6px);
+      font-family: var(--font);
     }
     #close-ar.visible { display: grid; }
   </style>
@@ -212,26 +219,31 @@
   <div id="start-screen">
     <div class="logo-ring">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86
-          0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm-1-11h2v2h-2zm0
-          4h2v4h-2z"/>
+        <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03
+          9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7
+          7 3.14 7 7-3.14 7-7 7zm-1-11h2v2h-2zm0 4h2v4h-2z"/>
       </svg>
     </div>
 
     <div class="card">
       <h1>Recorrido RA · <span>Unicaribe</span></h1>
-      <p class="sub">Apunta al marcador <code>Hiro</code> y descubre el campus en Realidad Aumentada.</p>
+      <p class="sub">
+        Apunta al marcador <code>Hiro</code> y descubre
+        el campus en Realidad Aumentada.
+      </p>
 
-      <!-- Panel de estado -->
       <div id="status-panel">
         <div class="status-row" id="s-aframe">
-          <span class="dot"></span><span id="s-aframe-txt">A-Frame: pendiente</span>
+          <span class="dot"></span>
+          <span id="s-aframe-txt">A-Frame: pendiente</span>
         </div>
         <div class="status-row" id="s-arjs">
-          <span class="dot"></span><span id="s-arjs-txt">AR.js: pendiente</span>
+          <span class="dot"></span>
+          <span id="s-arjs-txt">AR.js: pendiente</span>
         </div>
         <div class="status-row" id="s-scene">
-          <span class="dot"></span><span id="s-scene-txt">Escena: pendiente</span>
+          <span class="dot"></span>
+          <span id="s-scene-txt">Escena: pendiente</span>
         </div>
       </div>
 
@@ -246,39 +258,31 @@
 
   <!-- ═══════════════ AR LAYER ═══════════════ -->
   <div id="ar-root"></div>
-
-  <!-- HUD flotante mientras se detecta el marcador -->
   <div id="ar-hud">🔍 Buscando marcador Hiro…</div>
-
-  <!-- Botón cerrar -->
   <button id="close-ar" title="Cerrar AR">✕</button>
 
   <!-- ═══════════════ SCRIPTS ═══════════════ -->
   <script>
-  (function(){
-    // ── Referencias ─────────────────────────────────
+  (function () {
     const startScreen = document.getElementById("start-screen");
     const startBtn    = document.getElementById("start-btn");
     const arRoot      = document.getElementById("ar-root");
     const arHud       = document.getElementById("ar-hud");
     const closeBtn    = document.getElementById("close-ar");
 
-    // Estado visual
-    function setStatus(id, state, msg){
+    // ── Estado visual ────────────────────────────────
+    function setStatus(id, state, msg) {
       const row = document.getElementById("s-" + id);
       const txt = document.getElementById("s-" + id + "-txt");
-      if(!row) return;
-      row.className = "status-row " + state;   // '', 'busy', 'ok', 'err'
-      if(msg) txt.textContent = msg;
+      if (!row || !txt) return;
+      row.className = "status-row " + (state || "");
+      if (msg) txt.textContent = msg;
     }
 
-    // ── Carga de scripts con fallback ────────────────
-    function loadScript(src){
+    // ── Carga con fallback ───────────────────────────
+    function loadScript(src) {
       return new Promise((resolve, reject) => {
-        // Evitar doble carga
-        if(document.querySelector(`script[src="${src}"]`)){
-          resolve(); return;
-        }
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
         const s = document.createElement("script");
         s.src = src; s.async = true;
         s.onload = resolve;
@@ -287,91 +291,111 @@
       });
     }
 
-    async function loadWithFallback(id, label, urls){
+    async function loadWithFallback(id, label, urls) {
       setStatus(id, "busy", label + ": cargando…");
-      for(const url of urls){
-        try{
+      for (const url of urls) {
+        try {
           await loadScript(url);
           setStatus(id, "ok", label + ": cargado ✅");
           return;
-        } catch(e){ console.warn("[AR] fallback:", e.message); }
+        } catch (e) { console.warn("[AR] fallback:", e.message); }
       }
       setStatus(id, "err", label + ": ERROR ❌");
       throw new Error("No se pudo cargar " + label);
     }
 
-    // ── Corrección de zoom (se llama después de montar la escena) ─
-    function applyZoomFix(){
-      /*
-       * AR.js puede tardar unos frames en crear el <video>.
-       * Esperamos con un observer + timeout de seguridad.
-       */
-      const apply = (video) => {
-        video.style.cssText = [
+    // ── Fix de alineación video/canvas ───────────────
+    //
+    // AR.js inserta el <video> de forma asíncrona.
+    // Usamos tres mecanismos para cubrirlo en cualquier timing:
+    //   1. Aplicación inmediata si ya existe.
+    //   2. MutationObserver para cuando se inserte.
+    //   3. Polling cada 200 ms como respaldo.
+    //
+    // Después de aplicar el fix al video, disparamos
+    // window resize para que A-Frame recalcule el frustum
+    // y el overlay 3D quede alineado con el video.
+    //
+    function applyAlignmentFix() {
+      const fix = (v) => {
+        v.style.cssText = [
           "position:fixed!important",
           "top:0!important",
           "left:0!important",
           "width:100vw!important",
           "height:100vh!important",
-          "object-fit:contain!important",
+          "object-fit:cover!important",            // ← COVER: sin barras negras
+          "object-position:center center!important",
           "background:#000!important",
           "z-index:1!important",
-          "transform:none!important"
+          "transform:none!important"               // cancela escala de AR.js
         ].join(";");
-        console.log("[AR] zoom fix aplicado al video:", video.id || "(sin id)");
+
+        // Forzar recálculo del frustum de A-Frame
+        window.dispatchEvent(new Event("resize"));
+        console.log("[AR] alignment fix aplicado →", v.id || v.tagName);
       };
 
-      // 1) Ya existe
+      // 1) Inmediato
       const existing = document.getElementById("arjs-video")
         || document.querySelector("video[autoplay]");
-      if(existing){ apply(existing); return; }
+      if (existing) { fix(existing); return; }
 
-      // 2) MutationObserver para cuando aparezca
+      // 2) Observer
+      let settled = false;
       const obs = new MutationObserver(() => {
         const v = document.getElementById("arjs-video")
           || document.querySelector("video[autoplay]");
-        if(v){ obs.disconnect(); apply(v); }
+        if (v && !settled) { settled = true; obs.disconnect(); clearInterval(poll); fix(v); }
       });
-      obs.observe(document.body, { childList:true, subtree:true });
+      obs.observe(document.body, { childList: true, subtree: true });
 
-      // 3) Timeout de seguridad: reintento cada 200 ms por 4 s
+      // 3) Polling de respaldo
       let tries = 0;
-      const interval = setInterval(() => {
+      const poll = setInterval(() => {
         const v = document.getElementById("arjs-video")
           || document.querySelector("video[autoplay]");
-        if(v){ clearInterval(interval); obs.disconnect(); apply(v); }
-        if(++tries > 20) clearInterval(interval);
+        if (v && !settled) { settled = true; clearInterval(poll); obs.disconnect(); fix(v); }
+        if (++tries > 30) { clearInterval(poll); obs.disconnect(); }
       }, 200);
     }
 
     // ── Montar escena A-Frame ────────────────────────
-    function mountScene(){
+    function mountScene() {
       setStatus("scene", "busy", "Escena: montando…");
 
       /*
-       * NO usamos sourceWidth/sourceHeight: en muchos Android
-       * forzar resolución provoca pantalla negra porque el stream
-       * no puede adaptarse. AR.js usará la resolución nativa.
+       * renderer flags clave:
+       *   alpha:true             → canvas transparente (ve el video debajo)
+       *   colorManagement:false  → evita tinte de color en WebGL1
+       *   logarithmicDepthBuffer → reduce z-fighting en Android
        *
-       * Si después de pruebas necesitas resolución específica,
-       * agrega al string arjsConfig:
-       *   sourceWidth:640; sourceHeight:480;
-       * y prueba en tu dispositivo.
+       * arjs flags clave:
+       *   SIN sourceWidth/sourceHeight → usa resolución nativa del stream
+       *     (forzarla provoca pantalla negra en muchos Android)
+       *   detectionMode:mono     → más rápido, suficiente para Hiro
        */
-      const arjsConfig =
-        "sourceType: webcam;" +
-        "facingMode: environment;" +
-        "debugUIEnabled: false;";
+      const arjsConfig = [
+        "sourceType: webcam;",
+        "facingMode: environment;",
+        "debugUIEnabled: false;",
+        "detectionMode: mono;",
+        "matrixCodeType: 3x3;"
+      ].join(" ");
 
       arRoot.innerHTML = `
         <a-scene
           embedded
           vr-mode-ui="enabled: false"
-          renderer="antialias: true; precision: mediump; colorManagement: false;"
+          renderer="
+            antialias: true;
+            precision: mediump;
+            colorManagement: false;
+            alpha: true;
+            logarithmicDepthBuffer: true;
+          "
           arjs="${arjsConfig}"
-          style="position:fixed;inset:0;width:100vw;height:100vh;"
         >
-          <!-- ─ Marcador Hiro ─ -->
           <a-marker
             preset="hiro"
             id="hiro-marker"
@@ -380,29 +404,31 @@
             smoothTolerance="0.01"
             smoothThreshold="5"
           >
-            <!-- Fondo semitransparente -->
+            <!-- Panel de fondo -->
             <a-plane
               position="0 0 0"
               rotation="-90 0 0"
-              width="2.2" height="1.1"
+              width="2.2"
+              height="1.1"
               color="#0b1220"
               opacity="0.82"
             ></a-plane>
 
-            <!-- Línea de acento (top) -->
+            <!-- Franja de acento superior -->
             <a-plane
-              position="0 0.01 -0.5"
+              position="0 0.01 -0.48"
               rotation="-90 0 0"
-              width="2.2" height="0.04"
+              width="2.2"
+              height="0.04"
               color="#00e5ff"
-              opacity="0.9"
+              opacity="0.95"
             ></a-plane>
 
             <!-- Texto principal -->
             <a-text
               value="¡Bienvenida a Unicaribe!"
               align="center"
-              position="0 0.01 0.1"
+              position="0 0.01 0.08"
               rotation="-90 0 0"
               width="3.8"
               color="#ffffff"
@@ -425,27 +451,39 @@
         </a-scene>
       `;
 
-      // Escuchar eventos del marcador para actualizar HUD
-      const marker = document.getElementById("hiro-marker");
-      if(marker){
-        marker.addEventListener("markerFound", () => {
-          arHud.textContent = "✅ Marcador detectado";
-          arHud.style.color = "#00e676";
-        });
-        marker.addEventListener("markerLost", () => {
-          arHud.textContent = "🔍 Buscando marcador Hiro…";
-          arHud.style.color = "";
-        });
+      // Cuando A-Frame termine de cargar: re-aplicar fix + resize
+      const scene = arRoot.querySelector("a-scene");
+      const onLoaded = () => {
+        applyAlignmentFix();
+        window.dispatchEvent(new Event("resize"));
+        setStatus("scene", "ok", "Escena: lista ✅");
+
+        // Eventos del marcador
+        const marker = document.getElementById("hiro-marker");
+        if (marker) {
+          marker.addEventListener("markerFound", () => {
+            arHud.textContent = "✅ Marcador detectado";
+            arHud.style.color = "#00e676";
+          });
+          marker.addEventListener("markerLost", () => {
+            arHud.textContent = "🔍 Buscando marcador Hiro…";
+            arHud.style.color = "";
+          });
+        }
+      };
+
+      if (scene) {
+        if (scene.hasLoaded) { onLoaded(); }
+        else { scene.addEventListener("loaded", onLoaded, { once: true }); }
       }
 
-      setStatus("scene", "ok", "Escena: montada ✅");
-      applyZoomFix();
+      // Fix inmediato (antes del evento loaded) para cubrir timings rápidos
+      applyAlignmentFix();
     }
 
-    // ── Iniciar AR completo ──────────────────────────
-    async function startAR(){
+    // ── Iniciar AR ───────────────────────────────────
+    async function startAR() {
       startBtn.disabled = true;
-
       try {
         await loadWithFallback("aframe", "A-Frame", [
           "https://aframe.io/releases/1.4.2/aframe.min.js",
@@ -458,7 +496,6 @@
           "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js"
         ]);
 
-        // Transición a pantalla AR
         startScreen.classList.add("hidden");
         setTimeout(() => { startScreen.style.display = "none"; }, 420);
 
@@ -467,8 +504,7 @@
         closeBtn.classList.add("visible");
 
         mountScene();
-
-      } catch(err) {
+      } catch (err) {
         setStatus("scene", "err", "Error: " + err.message);
         alert("❌ " + err.message +
           "\n\nVerifica tu conexión y que el navegador permita cámara.");
@@ -477,8 +513,7 @@
     }
 
     // ── Cerrar AR ────────────────────────────────────
-    function closeAR(){
-      // Destruir escena para liberar cámara
+    function closeAR() {
       arRoot.innerHTML = "";
       arRoot.style.display = "none";
       arHud.classList.remove("visible");
@@ -486,15 +521,13 @@
       startScreen.style.display = "flex";
       startScreen.classList.remove("hidden");
       startBtn.disabled = false;
-      setStatus("aframe", "", "A-Frame: pendiente");
-      setStatus("arjs",   "", "AR.js: pendiente");
-      setStatus("scene",  "", "Escena: pendiente");
+      ["aframe","arjs","scene"].forEach(id =>
+        setStatus(id, "", id.charAt(0).toUpperCase() + id.slice(1) + ": pendiente")
+      );
     }
 
-    // ── Event listeners ──────────────────────────────
     startBtn.addEventListener("click", startAR);
     closeBtn.addEventListener("click", closeAR);
-
   })();
   </script>
 </body>
