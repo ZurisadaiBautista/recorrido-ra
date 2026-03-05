@@ -1,64 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recorrido RA</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recorrido RA</title>
 
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
-
-<style>
-body {
-  margin:0;
-  overflow:hidden;
-  font-family:Arial, sans-serif;
-}
-
-.hint {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.6);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-size: 14px;
-}
-</style>
-
+  <style>
+    body{margin:0;font-family:system-ui;background:#0b1220;color:#fff}
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:18px}
+    .card{max-width:520px;width:100%;background:rgba(255,255,255,.06);padding:18px;border-radius:18px}
+    h1{margin:0 0 8px;font-size:20px}
+    p{margin:0 0 14px;opacity:.9;line-height:1.4}
+    button{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .note{margin-top:10px;opacity:.75;font-size:13px}
+    #ar-root{position:fixed;inset:0;display:none;}
+  </style>
 </head>
 
 <body>
+  <!-- Pantalla inicial (IMPORTANTE: gesto del usuario) -->
+  <div class="wrap" id="start-screen">
+    <div class="card">
+      <h1>Recorrido RA - Unicaribe</h1>
+      <p>Presiona <b>Iniciar cámara</b> y apunta al marcador <b>Hiro</b>.</p>
+      <button id="start-btn">Iniciar cámara</button>
+      <div class="note">Si no aparece el permiso, revisamos bloqueo por sitio.</div>
+    </div>
+  </div>
 
-<a-scene
-embedded
-vr-mode-ui="enabled: false"
-renderer="logarithmicDepthBuffer: true;"
-arjs="sourceType: webcam; facingMode: environment; debugUIEnabled: false;">
+  <!-- Aquí se montará AR.js después del clic -->
+  <div id="ar-root"></div>
 
-<a-marker preset="hiro">
+  <script>
+    const startBtn = document.getElementById("start-btn");
+    const startScreen = document.getElementById("start-screen");
+    const arRoot = document.getElementById("ar-root");
 
-<a-box position="0 0.5 0" color="#2196F3"></a-box>
+    function loadScript(src){
+      return new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
 
-<a-text
-value="Biblioteca\nUnicaribe"
-align="center"
-position="0 1.2 0"
-color="white"
-width="4">
-</a-text>
+    async function startAR(){
+      // Oculta pantalla inicial y muestra contenedor
+      startScreen.style.display = "none";
+      arRoot.style.display = "block";
 
-</a-marker>
+      // Carga librerías solo después del gesto
+      await loadScript("https://aframe.io/releases/1.4.2/aframe.min.js");
+      await loadScript("https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js");
 
-<a-entity camera></a-entity>
+      // Inserta la escena AR
+      arRoot.innerHTML = `
+        <a-scene
+          embedded
+          vr-mode-ui="enabled: false"
+          renderer="antialias: true; precision: mediump;"
+          arjs="sourceType: webcam; facingMode: environment; debugUIEnabled: false;"
+        >
+          <a-marker preset="hiro">
+            <a-box position="0 0.5 0"></a-box>
+            <a-text value="Biblioteca\\nUnicaribe" align="center" position="0 1.2 0" width="4" color="#FFFFFF"></a-text>
+          </a-marker>
+          <a-entity camera></a-entity>
+        </a-scene>
+      `;
+    }
 
-</a-scene>
-
-<div class="hint">
-1) Permite el acceso a la cámara. 2) Apunta al marcador "Hiro".
-</div>
-
+    startBtn.addEventListener("click", () => {
+      startAR().catch(err => {
+        alert("Error cargando AR: " + err);
+        console.error(err);
+      });
+    });
+  </script>
 </body>
 </html>
