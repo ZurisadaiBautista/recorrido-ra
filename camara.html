@@ -2,151 +2,500 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Recorrido RA - Bienvenida</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>Recorrido RA · Unicaribe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    body{margin:0;font-family:system-ui;background:#0b1220;color:#fff}
-    .wrap{min-height:100vh;display:grid;place-items:center;padding:18px}
-    .card{max-width:560px;width:100%;background:rgba(255,255,255,.06);padding:18px;border-radius:18px}
-    h1{margin:0 0 8px;font-size:20px}
-    p{margin:0 0 14px;opacity:.9;line-height:1.4}
-    button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#fff;color:#0b1220}
-    .note{margin-top:10px;opacity:.75;font-size:13px}
-    #ar-root{position:fixed;inset:0;display:none;background:#000}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ✅ ARREGLO DEL "ZOOM" (sin tocar resolución de cámara)
-       AR.js crea un <video id="arjs-video">. Le forzamos:
-       - que ocupe toda la pantalla
-       - y que NO recorte (contain)
-    */
-    #arjs-video{
+    :root {
+      --bg:        #08101e;
+      --surface:   rgba(255,255,255,.07);
+      --border:    rgba(255,255,255,.12);
+      --accent:    #00e5ff;
+      --accent2:   #7c4dff;
+      --text:      #f0f4ff;
+      --muted:     rgba(240,244,255,.55);
+      --font:      'Space Grotesk', system-ui, sans-serif;
+      --radius:    20px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    /* ─── START SCREEN ─────────────────────────────── */
+    #start-screen {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%,
+        rgba(124,77,255,.18) 0%, transparent 70%),
+        var(--bg);
+      z-index: 100;
+      transition: opacity .4s ease;
+    }
+    #start-screen.hidden { opacity: 0; pointer-events: none; }
+
+    .logo-ring {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 2.5px solid var(--accent);
+      display: grid; place-items: center;
+      margin-bottom: 28px;
+      box-shadow: 0 0 32px rgba(0,229,255,.25);
+      animation: pulse-ring 2.5s ease-in-out infinite;
+    }
+    .logo-ring svg { width: 36px; height: 36px; fill: var(--accent); }
+
+    @keyframes pulse-ring {
+      0%,100% { box-shadow: 0 0 18px rgba(0,229,255,.20); }
+      50%      { box-shadow: 0 0 40px rgba(0,229,255,.45); }
+    }
+
+    .card {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .card h1 {
+      font-size: 22px; font-weight: 800;
+      letter-spacing: -.3px;
+      margin-bottom: 6px;
+    }
+    .card h1 span { color: var(--accent); }
+
+    .card .sub {
+      font-size: 14px; color: var(--muted);
+      line-height: 1.5; margin-bottom: 22px;
+    }
+
+    /* Status panel */
+    #status-panel {
+      background: rgba(0,0,0,.3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .status-row { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .status-row .dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      background: #444; transition: background .3s;
+    }
+    .status-row.ok   .dot { background: #00e676; box-shadow: 0 0 6px #00e676; }
+    .status-row.err  .dot { background: #ff5252; box-shadow: 0 0 6px #ff5252; }
+    .status-row.busy .dot { background: var(--accent); animation: blink .8s ease infinite; }
+
+    @keyframes blink { 50% { opacity: .2; } }
+
+    /* Start button */
+    #start-btn {
+      width: 100%;
+      padding: 15px;
+      font-family: var(--font);
+      font-size: 16px; font-weight: 800;
+      letter-spacing: .3px;
+      border: none; border-radius: 14px;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 6px 24px rgba(0,229,255,.25);
+    }
+    #start-btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+    #start-btn:not(:disabled):active { transform: scale(.97); }
+
+    .hint {
+      margin-top: 14px; font-size: 12px;
+      color: var(--muted); text-align: center; line-height: 1.5;
+    }
+    .hint code {
+      background: rgba(0,229,255,.1);
+      color: var(--accent);
+      border-radius: 4px; padding: 1px 5px;
+      font-size: 12px;
+    }
+
+    /* ─── AR LAYER ──────────────────────────────────── */
+    #ar-root {
+      position: fixed; inset: 0;
+      display: none;
+      background: #000;
+      z-index: 1;
+    }
+
+    /*
+     * ZOOM FIX (Android/Chrome):
+     *
+     * AR.js inserts <video id="arjs-video"> directly into <body>.
+     * By default it uses object-fit:cover → recorta / zoom.
+     * Solución: object-fit:contain + centrado absoluto.
+     *
+     * También corregimos el <canvas> que A-Frame crea,
+     * asegurándonos de que NO lo tape ni lo escale.
+     */
+    #arjs-video {
       position: fixed !important;
-      inset: 0 !important;
+      top: 0 !important; left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      object-fit: contain !important; /* <-- clave para quitar zoom */
-      z-index: 0 !important;
+      object-fit: contain !important; /* ← quita el zoom */
       background: #000 !important;
+      z-index: 1 !important;
+      transform: none !important;     /* elimina cualquier scale de AR.js */
     }
 
-    /* A-Frame canvas también full-screen */
-    canvas{
+    /* Canvas de A-Frame: overlay transparente */
+    #ar-root canvas,
+    a-scene canvas {
       position: fixed !important;
-      inset: 0 !important;
+      top: 0 !important; left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      z-index: 1 !important;
+      z-index: 2 !important;
+      background: transparent !important;
     }
+
+    /* HUD de estado en AR */
+    #ar-hud {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(8,16,30,.8);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 13px; color: var(--muted);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      display: none;
+    }
+    #ar-hud.visible { display: block; }
+
+    /* Botón cerrar AR */
+    #close-ar {
+      position: fixed;
+      top: 18px; right: 18px;
+      z-index: 20;
+      width: 40px; height: 40px;
+      background: rgba(8,16,30,.85);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      place-items: center;
+      color: var(--text);
+      font-size: 18px;
+      backdrop-filter: blur(6px);
+    }
+    #close-ar.visible { display: grid; }
   </style>
 </head>
-
 <body>
-  <div class="wrap" id="start-screen">
+
+  <!-- ═══════════════ START SCREEN ═══════════════ -->
+  <div id="start-screen">
+    <div class="logo-ring">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86
+          0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm-1-11h2v2h-2zm0
+          4h2v4h-2z"/>
+      </svg>
+    </div>
+
     <div class="card">
-      <h1>Recorrido RA - Unicaribe</h1>
-      <p>Presiona <b>Iniciar cámara</b> y apunta al marcador <b>Hiro</b>.</p>
-      <button id="start-btn">Iniciar cámara</button>
-      <div class="note" id="status">Estado: listo.</div>
-      <div class="note">Ajuste aplicado: “zoom” reducido con <code>object-fit: contain</code>.</div>
+      <h1>Recorrido RA · <span>Unicaribe</span></h1>
+      <p class="sub">Apunta al marcador <code>Hiro</code> y descubre el campus en Realidad Aumentada.</p>
+
+      <!-- Panel de estado -->
+      <div id="status-panel">
+        <div class="status-row" id="s-aframe">
+          <span class="dot"></span><span id="s-aframe-txt">A-Frame: pendiente</span>
+        </div>
+        <div class="status-row" id="s-arjs">
+          <span class="dot"></span><span id="s-arjs-txt">AR.js: pendiente</span>
+        </div>
+        <div class="status-row" id="s-scene">
+          <span class="dot"></span><span id="s-scene-txt">Escena: pendiente</span>
+        </div>
+      </div>
+
+      <button id="start-btn">▶ Iniciar cámara</button>
+
+      <p class="hint">
+        Se solicitarán permisos de cámara.<br>
+        Mantén el marcador <code>Hiro</code> bien iluminado y plano.
+      </p>
     </div>
   </div>
 
+  <!-- ═══════════════ AR LAYER ═══════════════ -->
   <div id="ar-root"></div>
 
-  <script>
-    const startBtn = document.getElementById("start-btn");
-    const startScreen = document.getElementById("start-screen");
-    const arRoot = document.getElementById("ar-root");
-    const statusEl = document.getElementById("status");
-    function setStatus(msg){ statusEl.textContent = "Estado: " + msg; }
+  <!-- HUD flotante mientras se detecta el marcador -->
+  <div id="ar-hud">🔍 Buscando marcador Hiro…</div>
 
-    function loadScriptOnce(src){
+  <!-- Botón cerrar -->
+  <button id="close-ar" title="Cerrar AR">✕</button>
+
+  <!-- ═══════════════ SCRIPTS ═══════════════ -->
+  <script>
+  (function(){
+    // ── Referencias ─────────────────────────────────
+    const startScreen = document.getElementById("start-screen");
+    const startBtn    = document.getElementById("start-btn");
+    const arRoot      = document.getElementById("ar-root");
+    const arHud       = document.getElementById("ar-hud");
+    const closeBtn    = document.getElementById("close-ar");
+
+    // Estado visual
+    function setStatus(id, state, msg){
+      const row = document.getElementById("s-" + id);
+      const txt = document.getElementById("s-" + id + "-txt");
+      if(!row) return;
+      row.className = "status-row " + state;   // '', 'busy', 'ok', 'err'
+      if(msg) txt.textContent = msg;
+    }
+
+    // ── Carga de scripts con fallback ────────────────
+    function loadScript(src){
       return new Promise((resolve, reject) => {
+        // Evitar doble carga
+        if(document.querySelector(`script[src="${src}"]`)){
+          resolve(); return;
+        }
         const s = document.createElement("script");
         s.src = src; s.async = true;
-        s.onload = () => resolve(src);
-        s.onerror = () => reject(new Error("No se pudo cargar: " + src));
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Error al cargar: " + src));
         document.head.appendChild(s);
       });
     }
 
-    async function loadWithFallback(name, urls){
-      for (const url of urls){
+    async function loadWithFallback(id, label, urls){
+      setStatus(id, "busy", label + ": cargando…");
+      for(const url of urls){
         try{
-          setStatus(`cargando ${name}…`);
-          await loadScriptOnce(url);
-          setStatus(`${name} cargado ✅`);
+          await loadScript(url);
+          setStatus(id, "ok", label + ": cargado ✅");
           return;
-        } catch(e){ console.warn(e.message); }
+        } catch(e){ console.warn("[AR] fallback:", e.message); }
       }
-      throw new Error(`Falló la carga de ${name}. Posible bloqueo de red/CDN.`);
+      setStatus(id, "err", label + ": ERROR ❌");
+      throw new Error("No se pudo cargar " + label);
     }
 
+    // ── Corrección de zoom (se llama después de montar la escena) ─
+    function applyZoomFix(){
+      /*
+       * AR.js puede tardar unos frames en crear el <video>.
+       * Esperamos con un observer + timeout de seguridad.
+       */
+      const apply = (video) => {
+        video.style.cssText = [
+          "position:fixed!important",
+          "top:0!important",
+          "left:0!important",
+          "width:100vw!important",
+          "height:100vh!important",
+          "object-fit:contain!important",
+          "background:#000!important",
+          "z-index:1!important",
+          "transform:none!important"
+        ].join(";");
+        console.log("[AR] zoom fix aplicado al video:", video.id || "(sin id)");
+      };
+
+      // 1) Ya existe
+      const existing = document.getElementById("arjs-video")
+        || document.querySelector("video[autoplay]");
+      if(existing){ apply(existing); return; }
+
+      // 2) MutationObserver para cuando aparezca
+      const obs = new MutationObserver(() => {
+        const v = document.getElementById("arjs-video")
+          || document.querySelector("video[autoplay]");
+        if(v){ obs.disconnect(); apply(v); }
+      });
+      obs.observe(document.body, { childList:true, subtree:true });
+
+      // 3) Timeout de seguridad: reintento cada 200 ms por 4 s
+      let tries = 0;
+      const interval = setInterval(() => {
+        const v = document.getElementById("arjs-video")
+          || document.querySelector("video[autoplay]");
+        if(v){ clearInterval(interval); obs.disconnect(); apply(v); }
+        if(++tries > 20) clearInterval(interval);
+      }, 200);
+    }
+
+    // ── Montar escena A-Frame ────────────────────────
     function mountScene(){
-      // Sin sourceWidth/sourceHeight para no romper streams en Android
-      const arjsConfig = `sourceType: webcam; facingMode: environment; debugUIEnabled: false;`;
+      setStatus("scene", "busy", "Escena: montando…");
+
+      /*
+       * NO usamos sourceWidth/sourceHeight: en muchos Android
+       * forzar resolución provoca pantalla negra porque el stream
+       * no puede adaptarse. AR.js usará la resolución nativa.
+       *
+       * Si después de pruebas necesitas resolución específica,
+       * agrega al string arjsConfig:
+       *   sourceWidth:640; sourceHeight:480;
+       * y prueba en tu dispositivo.
+       */
+      const arjsConfig =
+        "sourceType: webcam;" +
+        "facingMode: environment;" +
+        "debugUIEnabled: false;";
 
       arRoot.innerHTML = `
         <a-scene
           embedded
           vr-mode-ui="enabled: false"
-          renderer="antialias: true; precision: mediump;"
+          renderer="antialias: true; precision: mediump; colorManagement: false;"
           arjs="${arjsConfig}"
+          style="position:fixed;inset:0;width:100vw;height:100vh;"
         >
-          <a-marker preset="hiro">
-            <a-plane position="0 0.8 0" rotation="-90 0 0" width="1.9" height="1.0" color="#111" opacity="0.75"></a-plane>
-
-            <a-text value="¡Bienvenida a Unicaribe!"
-              align="center"
-              position="0 0.81 0.35"
+          <!-- ─ Marcador Hiro ─ -->
+          <a-marker
+            preset="hiro"
+            id="hiro-marker"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+          >
+            <!-- Fondo semitransparente -->
+            <a-plane
+              position="0 0 0"
               rotation="-90 0 0"
-              width="3.3"
-              color="#FFFFFF"></a-text>
+              width="2.2" height="1.1"
+              color="#0b1220"
+              opacity="0.82"
+            ></a-plane>
 
-            <a-text value="Apunta al marcador Hiro"
-              align="center"
-              position="0 0.81 0.10"
+            <!-- Línea de acento (top) -->
+            <a-plane
+              position="0 0.01 -0.5"
               rotation="-90 0 0"
-              width="2.6"
-              color="#FFFFFF"></a-text>
+              width="2.2" height="0.04"
+              color="#00e5ff"
+              opacity="0.9"
+            ></a-plane>
+
+            <!-- Texto principal -->
+            <a-text
+              value="¡Bienvenida a Unicaribe!"
+              align="center"
+              position="0 0.01 0.1"
+              rotation="-90 0 0"
+              width="3.8"
+              color="#ffffff"
+              font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
+            ></a-text>
+
+            <!-- Texto secundario -->
+            <a-text
+              value="Apunta al marcador Hiro"
+              align="center"
+              position="0 0.01 0.38"
+              rotation="-90 0 0"
+              width="3.0"
+              color="#00e5ff"
+              font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"
+            ></a-text>
           </a-marker>
 
           <a-entity camera></a-entity>
         </a-scene>
       `;
+
+      // Escuchar eventos del marcador para actualizar HUD
+      const marker = document.getElementById("hiro-marker");
+      if(marker){
+        marker.addEventListener("markerFound", () => {
+          arHud.textContent = "✅ Marcador detectado";
+          arHud.style.color = "#00e676";
+        });
+        marker.addEventListener("markerLost", () => {
+          arHud.textContent = "🔍 Buscando marcador Hiro…";
+          arHud.style.color = "";
+        });
+      }
+
+      setStatus("scene", "ok", "Escena: montada ✅");
+      applyZoomFix();
     }
 
+    // ── Iniciar AR completo ──────────────────────────
     async function startAR(){
       startBtn.disabled = true;
 
-      await loadWithFallback("A-Frame", [
-        "https://aframe.io/releases/1.4.2/aframe.min.js",
-        "https://unpkg.com/aframe@1.4.2/dist/aframe.min.js",
-        "https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"
-      ]);
+      try {
+        await loadWithFallback("aframe", "A-Frame", [
+          "https://aframe.io/releases/1.4.2/aframe.min.js",
+          "https://unpkg.com/aframe@1.4.2/dist/aframe.min.js",
+          "https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"
+        ]);
 
-      await loadWithFallback("AR.js", [
-        "https://unpkg.com/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js",
-        "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js",
-        "https://unpkg.com/ar.js@3.4.5/aframe/build/aframe-ar.js"
-      ]);
+        await loadWithFallback("arjs", "AR.js", [
+          "https://unpkg.com/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js",
+          "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js"
+        ]);
 
-      startScreen.style.display = "none";
-      arRoot.style.display = "block";
+        // Transición a pantalla AR
+        startScreen.classList.add("hidden");
+        setTimeout(() => { startScreen.style.display = "none"; }, 420);
 
-      mountScene();
-      setStatus("AR iniciado ✅");
+        arRoot.style.display = "block";
+        arHud.classList.add("visible");
+        closeBtn.classList.add("visible");
+
+        mountScene();
+
+      } catch(err) {
+        setStatus("scene", "err", "Error: " + err.message);
+        alert("❌ " + err.message +
+          "\n\nVerifica tu conexión y que el navegador permita cámara.");
+        startBtn.disabled = false;
+      }
     }
 
-    startBtn.addEventListener("click", () => {
-      startAR().catch(err => {
-        alert("Error: " + err.message);
-        setStatus("ERROR ❌ " + err.message);
-        console.error(err);
-        startBtn.disabled = false;
-      });
-    });
+    // ── Cerrar AR ────────────────────────────────────
+    function closeAR(){
+      // Destruir escena para liberar cámara
+      arRoot.innerHTML = "";
+      arRoot.style.display = "none";
+      arHud.classList.remove("visible");
+      closeBtn.classList.remove("visible");
+      startScreen.style.display = "flex";
+      startScreen.classList.remove("hidden");
+      startBtn.disabled = false;
+      setStatus("aframe", "", "A-Frame: pendiente");
+      setStatus("arjs",   "", "AR.js: pendiente");
+      setStatus("scene",  "", "Escena: pendiente");
+    }
+
+    // ── Event listeners ──────────────────────────────
+    startBtn.addEventListener("click", startAR);
+    closeBtn.addEventListener("click", closeAR);
+
+  })();
   </script>
 </body>
 </html>
