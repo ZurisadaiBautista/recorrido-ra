@@ -7,35 +7,48 @@
 
   <style>
     body{margin:0;font-family:system-ui;background:#0b1220;color:#fff}
-    #start-screen{
-      min-height:100vh;display:grid;place-items:center;padding:18px
-    }
-    .card{
-      max-width:560px;width:100%;
-      background:rgba(255,255,255,.06);
-      padding:18px;border-radius:18px
-    }
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:18px}
+    .card{max-width:560px;width:100%;background:rgba(255,255,255,.06);padding:18px;border-radius:18px}
     h1{margin:0 0 8px;font-size:20px}
     p{margin:0 0 14px;opacity:.9;line-height:1.4}
-    button{
-      border:0;border-radius:12px;padding:12px 16px;
-      font-weight:800;cursor:pointer;background:#fff;color:#0b1220
-    }
+    button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;background:#fff;color:#0b1220}
     .note{margin-top:10px;opacity:.75;font-size:13px}
     #ar-root{position:fixed;inset:0;display:none;background:#000}
-    /* Asegura que la escena ocupe toda la pantalla */
-    a-scene{width:100vw;height:100vh;}
+
+    /* ✅ ARREGLO DEL "ZOOM" (sin tocar resolución de cámara)
+       AR.js crea un <video id="arjs-video">. Le forzamos:
+       - que ocupe toda la pantalla
+       - y que NO recorte (contain)
+    */
+    #arjs-video{
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: contain !important; /* <-- clave para quitar zoom */
+      z-index: 0 !important;
+      background: #000 !important;
+    }
+
+    /* A-Frame canvas también full-screen */
+    canvas{
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+    }
   </style>
 </head>
 
 <body>
-  <div id="start-screen">
+  <div class="wrap" id="start-screen">
     <div class="card">
       <h1>Recorrido RA - Unicaribe</h1>
       <p>Presiona <b>Iniciar cámara</b> y apunta al marcador <b>Hiro</b>.</p>
       <button id="start-btn">Iniciar cámara</button>
       <div class="note" id="status">Estado: listo.</div>
-      <div class="note">Si ves “zoom”, esta versión ajusta la resolución según tu pantalla.</div>
+      <div class="note">Ajuste aplicado: “zoom” reducido con <code>object-fit: contain</code>.</div>
     </div>
   </div>
 
@@ -46,14 +59,13 @@
     const startScreen = document.getElementById("start-screen");
     const arRoot = document.getElementById("ar-root");
     const statusEl = document.getElementById("status");
-
     function setStatus(msg){ statusEl.textContent = "Estado: " + msg; }
 
     function loadScriptOnce(src){
       return new Promise((resolve, reject) => {
         const s = document.createElement("script");
         s.src = src; s.async = true;
-        s.onload = resolve;
+        s.onload = () => resolve(src);
         s.onerror = () => reject(new Error("No se pudo cargar: " + src));
         document.head.appendChild(s);
       });
@@ -68,69 +80,38 @@
           return;
         } catch(e){ console.warn(e.message); }
       }
-      throw new Error(`Falló la carga de ${name}. (red/CDN bloqueado)`);
-    }
-
-    // Elige la resolución más parecida al aspect ratio de tu pantalla
-    function pickBestResolution(){
-      const sw = window.innerWidth;
-      const sh = window.innerHeight;
-      const targetAR = sw / sh;
-
-      // Candidatos comunes (ancho x alto)
-      const candidates = [
-        [1920,1080], // 16:9
-        [1280,720],  // 16:9
-        [1280,960],  // 4:3-ish
-        [1024,768],  // 4:3
-        [800,600],   // 4:3
-        [640,480],   // 4:3
-      ];
-
-      let best = candidates[0];
-      let bestDiff = Infinity;
-
-      for (const [w,h] of candidates){
-        const ar = w / h;
-        const diff = Math.abs(ar - targetAR);
-        if (diff < bestDiff){
-          bestDiff = diff;
-          best = [w,h];
-        }
-      }
-
-      return { sourceW: best[0], sourceH: best[1], screenW: sw, screenH: sh };
+      throw new Error(`Falló la carga de ${name}. Posible bloqueo de red/CDN.`);
     }
 
     function mountScene(){
-      const { sourceW, sourceH, screenW, screenH } = pickBestResolution();
-      setStatus(`usando ${sourceW}x${sourceH} (pantalla ${screenW}x${screenH})`);
-
-      const arjsConfig = `
-        sourceType: webcam;
-        facingMode: environment;
-        debugUIEnabled: false;
-        sourceWidth: ${sourceW}; sourceHeight: ${sourceH};
-        displayWidth: ${screenW}; displayHeight: ${screenH};
-      `.replace(/\s+/g,' ').trim();
+      // Sin sourceWidth/sourceHeight para no romper streams en Android
+      const arjsConfig = `sourceType: webcam; facingMode: environment; debugUIEnabled: false;`;
 
       arRoot.innerHTML = `
         <a-scene
           embedded
           vr-mode-ui="enabled: false"
-          renderer="antialias: true; precision: mediump; alpha: true;"
+          renderer="antialias: true; precision: mediump;"
           arjs="${arjsConfig}"
         >
           <a-marker preset="hiro">
-            <a-plane position="0 0.8 0" rotation="-90 0 0" width="1.8" height="1.0" color="#111" opacity="0.75"></a-plane>
-            <a-text value="¡Bienvenida a Unicaribe!" align="center"
-              position="0 0.81 0.35" rotation="-90 0 0"
-              width="3.2" color="#FFFFFF"></a-text>
+            <a-plane position="0 0.8 0" rotation="-90 0 0" width="1.9" height="1.0" color="#111" opacity="0.75"></a-plane>
 
-            <a-text value="Apunta al marcador Hiro" align="center"
-              position="0 0.81 0.10" rotation="-90 0 0"
-              width="2.6" color="#FFFFFF"></a-text>
+            <a-text value="¡Bienvenida a Unicaribe!"
+              align="center"
+              position="0 0.81 0.35"
+              rotation="-90 0 0"
+              width="3.3"
+              color="#FFFFFF"></a-text>
+
+            <a-text value="Apunta al marcador Hiro"
+              align="center"
+              position="0 0.81 0.10"
+              rotation="-90 0 0"
+              width="2.6"
+              color="#FFFFFF"></a-text>
           </a-marker>
+
           <a-entity camera></a-entity>
         </a-scene>
       `;
@@ -155,11 +136,7 @@
       arRoot.style.display = "block";
 
       mountScene();
-
-      // Si giras el celular, recalcula para evitar recortes/zoom
-      window.addEventListener("resize", () => {
-        if (arRoot.style.display === "block") mountScene();
-      });
+      setStatus("AR iniciado ✅");
     }
 
     startBtn.addEventListener("click", () => {
