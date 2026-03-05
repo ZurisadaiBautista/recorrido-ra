@@ -18,44 +18,71 @@
 </head>
 
 <body>
-  <!-- Pantalla inicial (IMPORTANTE: gesto del usuario) -->
   <div class="wrap" id="start-screen">
     <div class="card">
       <h1>Recorrido RA - Unicaribe</h1>
       <p>Presiona <b>Iniciar cámara</b> y apunta al marcador <b>Hiro</b>.</p>
       <button id="start-btn">Iniciar cámara</button>
-      <div class="note">Si no aparece el permiso, revisamos bloqueo por sitio.</div>
+      <div class="note" id="status">Estado: listo.</div>
     </div>
   </div>
 
-  <!-- Aquí se montará AR.js después del clic -->
   <div id="ar-root"></div>
 
   <script>
     const startBtn = document.getElementById("start-btn");
     const startScreen = document.getElementById("start-screen");
     const arRoot = document.getElementById("ar-root");
+    const statusEl = document.getElementById("status");
 
-    function loadScript(src){
+    function setStatus(msg){ statusEl.textContent = "Estado: " + msg; }
+
+    function loadScriptOnce(src){
       return new Promise((resolve, reject) => {
         const s = document.createElement("script");
         s.src = src;
-        s.onload = resolve;
-        s.onerror = reject;
+        s.async = true;
+        s.onload = () => resolve(src);
+        s.onerror = () => reject(new Error("No se pudo cargar: " + src));
         document.head.appendChild(s);
       });
     }
 
+    async function loadWithFallback(name, urls){
+      for (const url of urls){
+        try{
+          setStatus(`cargando ${name}… (${url})`);
+          const ok = await loadScriptOnce(url);
+          setStatus(`${name} cargado ✅`);
+          return ok;
+        } catch(e){
+          console.warn(e.message);
+        }
+      }
+      throw new Error(`Falló la carga de ${name}. Posible bloqueo de red/CDN.`);
+    }
+
     async function startAR(){
-      // Oculta pantalla inicial y muestra contenedor
+      startBtn.disabled = true;
+
+      // 1) Cargar A-Frame (CDN alternativos)
+      await loadWithFallback("A-Frame", [
+        "https://aframe.io/releases/1.4.2/aframe.min.js",
+        "https://unpkg.com/aframe@1.4.2/dist/aframe.min.js",
+        "https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"
+      ]);
+
+      // 2) Cargar AR.js (CDN alternativos)
+      await loadWithFallback("AR.js", [
+        "https://unpkg.com/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js",
+        "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js",
+        "https://unpkg.com/ar.js@3.4.5/aframe/build/aframe-ar.js"
+      ]);
+
+      // Montar escena después del gesto del usuario
       startScreen.style.display = "none";
       arRoot.style.display = "block";
 
-      // Carga librerías solo después del gesto
-      await loadScript("https://aframe.io/releases/1.4.2/aframe.min.js");
-      await loadScript("https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js");
-
-      // Inserta la escena AR
       arRoot.innerHTML = `
         <a-scene
           embedded
@@ -70,12 +97,16 @@
           <a-entity camera></a-entity>
         </a-scene>
       `;
+
+      setStatus("escena montada ✅ (si no pide cámara, revisamos bloqueo por sitio)");
     }
 
     startBtn.addEventListener("click", () => {
       startAR().catch(err => {
-        alert("Error cargando AR: " + err);
+        alert("Error: " + err.message);
+        setStatus("ERROR ❌ " + err.message);
         console.error(err);
+        startBtn.disabled = false;
       });
     });
   </script>
